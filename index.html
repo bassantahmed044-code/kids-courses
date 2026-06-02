@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام متابعة كورسات وحضور الأولاد بالتاريخ</title>
+    <title>النظام الشامل لمتابعة كورسات وحضور الأولاد</title>
     <style>
         :root {
             --bg-color: #f4f7f6;
@@ -37,24 +37,18 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
         }
 
-        h1, h2 { text-align: center; color: #37474f; }
+        h1, h2, h3 { text-align: center; color: #37474f; }
         h1 { margin-bottom: 30px; font-size: 1.8rem; }
         h2 { margin-top: 40px; font-size: 1.4rem; border-bottom: 2px solid #cfd8dc; padding-bottom: 10px; }
 
         .form-section {
-            background-color: #f9fbe7;
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 25px;
-            border: 1px solid #d4e157;
+            border: 1px solid #cfd8dc;
         }
-
-        .form-section.pink-section {
-            background-color: var(--pink-soft);
-            border: 1px solid var(--pink-dark);
-        }
-
-        .form-section h3 { margin-top: 0; color: #37474f; margin-bottom: 15px; }
+        .course-section { background-color: #f9fbe7; border-color: #d4e157; }
+        .attendance-section { background-color: var(--pink-soft); border-color: var(--pink-dark); }
 
         .form-group {
             display: flex;
@@ -68,7 +62,7 @@
             border-radius: 8px;
             font-size: 0.95rem;
             flex: 1;
-            min-width: 150px;
+            min-width: 140px;
         }
 
         .btn-action {
@@ -80,45 +74,35 @@
             font-size: 0.95rem;
             transition: background 0.2s;
         }
-
         .btn-add-course { background-color: #90caf9; color: #0d47a1; }
         .btn-add-attendance { background-color: #a5d6a7; color: #1b5e20; }
         .btn-add-course:hover { background-color: #64b5f6; }
         .btn-add-attendance:hover { background-color: #81c784; }
 
-        .table-responsive { overflow-x: auto; margin-top: 15px; }
+        .table-responsive { overflow-x: auto; margin-top: 15px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; text-align: right; }
         th, td { padding: 12px 15px; border-bottom: 1px solid #e0e0e0; }
         th { background-color: #cfd8dc; color: #37474f; font-weight: bold; }
 
-        .status-حضور { color: #2e7d32; font-weight: bold; background-color: #e8f5e9; padding: 4px 8px; border-radius: 5px; }
-        .status-غياب { color: #c62828; font-weight: bold; background-color: #ffebee; padding: 4px 8px; border-radius: 5px; }
-        .status-تأجيل { color: #ef6c00; font-weight: bold; background-color: #fff3e0; padding: 4px 8px; border-radius: 5px; }
-
-        .btn-save-all {
-            background-color: #4db6ac;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-top: 25px;
-            display: block;
-            width: 100%;
+        .status-حضور, .status-✔️ { color: #2e7d32; font-weight: bold; background-color: #e8f5e9; padding: 4px 8px; border-radius: 5px; }
+        .status-غياب, .status-❌ { color: #c62828; font-weight: bold; background-color: #ffebee; padding: 4px 8px; border-radius: 5px; }
+        .status-تأجيل, .status-⏳ { color: #ef6c00; font-weight: bold; background-color: #fff3e0; padding: 4px 8px; border-radius: 5px; }
+        
+        .btn-save-courses {
+            background-color: #4db6ac; color: white; border: none; padding: 12px 25px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; display: block; width: 100%; margin-top: 10px;
         }
-        .btn-save-all:hover { background-color: #009688; }
-
+        .btn-save-courses:hover { background-color: #009688; }
         .delete-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 1.1rem; }
+        .loading-text { text-align: center; color: #78909c; font-style: italic; margin: 10px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📅 نظام متابعة المواعيد وسجل الحصص التاريخي</h1>
+    <h1>📅 النظام الشامل لمتابعة كورسات وحضور الأولاد</h1>
 
-    <div class="form-section">
+    <div class="form-section course-section">
         <h3>➕ إضافة كورس جديد للمواعيد الثابتة</h3>
         <div class="form-group">
             <input type="text" id="studentName" placeholder="اسم الابن (ألماس / عز الدين)">
@@ -129,7 +113,7 @@
         </div>
     </div>
 
-    <h3>📌 جدول المواعيد الثابتة والاشتراكات الشهرية</h3>
+    <h3>📌 جدول المواعيد الثابتة والاشتراكات الشهريّة</h3>
     <div class="table-responsive">
         <table>
             <thead>
@@ -161,24 +145,28 @@
                 </tr>
             </tbody>
         </table>
+        <button class="btn-save-courses" onclick="saveFixedCourses()">💾 حفظ تعديلات الاشتراكات والكورسات الثابتة</button>
     </div>
 
-    <div class="form-section pink-section" style="margin-top: 40px;">
-        <h3>📝 تسجيل حصة جديدة بالتاريخ (حضور / غياب / تأجيل)</h3>
+    <hr style="border: 0; border-top: 2px dashed #cfd8dc; margin: 40px 0;">
+
+    <div class="form-section attendance-section">
+        <h3>📝 تسجيل حصة جديدة بالتاريخ (تُسمّع في الموقع وجوجل شيت فوراً)</h3>
         <div class="form-group">
             <select id="attendanceStudent">
                 <option value="ألماس">ألماس</option>
                 <option value="عز الدين">عز الدين</option>
             </select>
-            <input type="text" id="attendanceCourse" placeholder="المادة (مثلاً: انجلش)" value="انجلش">
+            <input type="text" id="attendanceCourse" placeholder="المادة" value="انجلش">
             <input type="date" id="attendanceDate">
             <select id="attendanceStatus">
                 <option value="حضور">✔️ حضور</option>
                 <option value="غياب">❌ غياب</option>
                 <option value="تأجيل">⏳ تأجيل</option>
             </select>
-            <button class="btn-action btn-add-attendance" onclick="addAttendanceRecord()">تسجيل الحصة</button>
+            <button class="btn-action btn-add-attendance" id="submitBtn" onclick="addAttendanceRecord()">تسجيل الحصة</button>
         </div>
+        <div id="loadingStatus" class="loading-text" style="display:none;">جاري إرسال البيانات لجوجل شيت... 🔄</div>
     </div>
 
     <h2>📜 سجل الحصص التاريخي التراكمي</h2>
@@ -190,132 +178,75 @@
                     <th>المادة / الكورس</th>
                     <th>التاريخ</th>
                     <th>حالة الحصة</th>
-                    <th>حذف السجل</th>
+                    <th>حذف</th>
                 </tr>
             </thead>
             <tbody id="attendanceHistoryBody">
-                </tbody>
+                <tr><td colspan="5" style="text-align:center; color:#999;">جاري تحميل البيانات الحالية...</td></tr>
+            </tbody>
         </table>
     </div>
-
-    <button class="btn-save-all" onclick="saveAllDataToStorage(true)">💾 حفظ كل البيانات والتواريخ المتغيرة</button>
 </div>
 
 <script>
-    // تعيين تاريخ اليوم تلقائياً
+    const SHEETDB_URL = "https://sheetdb.io/api/v1/1845ir4smen4c";
+
     document.getElementById('attendanceDate').valueAsDate = new Date();
 
-    // دالة إضافة كورس ثابت
+    // --- أولاً: أكواد إدارة المواعيد الثابتة والاشتراكات ---
     function addNewCourseRow() {
         const student = document.getElementById('studentName').value.trim();
         const course = document.getElementById('courseName').value.trim();
         const days = document.getElementById('courseDays').value.trim();
         const time = document.getElementById('courseTime').value.trim();
 
-        if(!student || !course || !days || !time) { 
-            alert("تنبيه: يرجى ملء جميع خانات الكورس الجديد أولاً (الاسم، المادة، الأيام، الموعد)."); 
-            return; 
-        }
+        if(!student || !course || !days || !time) { alert("برجاء ملء جميع خانات الكورس الجديد"); return; }
 
         const tbody = document.getElementById('coursesTableBody');
         const tr = document.createElement('tr');
         tr.style.borderRight = "5px solid var(--pistachio-dark)";
         tr.innerHTML = `
-            <td><b>${student}</b></td>
-            <td>${course}</td>
-            <td>${days}</td>
-            <td>${time}</td>
+            <td><b>${student}</b></td><td>${course}</td><td>${days}</td><td>${time}</td>
             <td><input type="text" class="input-payment" style="width:90%; padding:8px;" placeholder="تفاصيل الدفع والتاريخ"></td>
-            <td><button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button></td>
+            <td><button class="delete-btn" onclick="this.closest('tr').remove(); saveFixedCourses();">🗑️</button></td>
         `;
         tbody.appendChild(tr);
         
-        // تحديث الخيارات تلقائياً
         const select = document.getElementById('attendanceStudent');
         if (![...select.options].some(opt => opt.value === student)) {
-            const opt = document.createElement('option');
-            opt.value = student; opt.innerText = student;
-            select.appendChild(opt);
+            const opt = document.createElement('option'); opt.value = student; opt.innerText = student; select.appendChild(opt);
         }
-
-        document.getElementById('studentName').value = '';
-        document.getElementById('courseName').value = '';
-        document.getElementById('courseDays').value = '';
-        document.getElementById('courseTime').value = '';
-        saveAllDataToStorage(false);
+        document.getElementById('studentName').value = ''; document.getElementById('courseName').value = '';
+        document.getElementById('courseDays').value = ''; document.getElementById('courseTime').value = '';
+        saveFixedCourses();
     }
 
-    // دالة تسجيل حصة بالتاريخ
-    function addAttendanceRecord() {
-        const student = document.getElementById('attendanceStudent').value;
-        const course = document.getElementById('attendanceCourse').value.trim();
-        const date = document.getElementById('attendanceDate').value;
-        const status = document.getElementById('attendanceStatus').value;
-
-        if(!course || !date) { 
-            alert("تنبيه: يرجى كتابة اسم المادة وتحديد التاريخ قبل التسجيل."); 
-            return; 
-        }
-
-        const tbody = document.getElementById('attendanceHistoryBody');
-        const tr = document.createElement('tr');
-        
-        tr.innerHTML = `
-            <td><b>${student}</b></td>
-            <td>${course}</td>
-            <td>${date}</td>
-            <td><span class="status-${status}">${status === 'حضور' ? '✔️ حضور' : status === 'غياب' ? '❌ غياب' : '⏳ تأجيل'}</span></td>
-            <td><button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button></td>
-        `;
-        
-        tbody.insertBefore(tr, tbody.firstChild);
-        saveAllDataToStorage(false);
-    }
-
-    // دالة الحفظ الشامل
-    function saveAllDataToStorage(showAlert) {
-        const courseRows = document.querySelectorAll('#coursesTableBody tr');
-        const coursesData = [];
-        courseRows.forEach(row => {
+    function saveFixedCourses() {
+        const rows = document.querySelectorAll('#coursesTableBody tr');
+        const data = [];
+        rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             const paymentVal = row.querySelector('.input-payment') ? row.querySelector('.input-payment').value : '';
-            coursesData.push({
-                student: cells[0].innerText, course: cells[1].innerText,
-                days: cells[2].innerText, time: cells[3].innerText,
+            data.push({
+                student: cells[0].innerText, course: cells[1].innerText, days: cells[2].innerText, time: cells[3].innerText,
                 payment: paymentVal, style: row.style.borderRight, isFixed: row.getAttribute('data-fixed')
             });
         });
-        localStorage.setItem('savedCoursesV4', JSON.stringify(coursesData));
-
-        const attendanceRows = document.querySelectorAll('#attendanceHistoryBody tr');
-        const attendanceData = [];
-        attendanceRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const statusText = cells[3].innerText.replace(/[✔️❌⏳\s]/g, '');
-            attendanceData.push({
-                student: cells[0].innerText, course: cells[1].innerText,
-                date: cells[2].innerText, status: statusText
-            });
-        });
-        localStorage.setItem('savedAttendanceV4', JSON.stringify(attendanceData));
-
-        if(showAlert) {
-            alert("تم حفظ جميع التحديثات والاشتراكات بنجاح! ✨");
-        }
+        localStorage.setItem('fixedCoursesV5', JSON.stringify(data));
+        alert("تم حفظ المواعيد الثابتة والاشتراكات بنجاح! 💾");
     }
 
-    // دالة تحميل البيانات عند فتح الموقع
-    function loadAllData() {
-        const storedCourses = localStorage.getItem('savedCoursesV4');
-        if(storedCourses) {
-            const data = JSON.parse(storedCourses);
+    function loadFixedCourses() {
+        const stored = localStorage.getItem('fixedCoursesV5');
+        if(stored) {
+            const data = JSON.parse(stored);
             const tbody = document.getElementById('coursesTableBody');
             tbody.innerHTML = '';
             data.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.style.borderRight = item.style;
                 if(item.isFixed) tr.setAttribute('data-fixed', 'true');
-                const delBtn = item.isFixed ? '-' : `<button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button>`;
+                const delBtn = item.isFixed ? '-' : `<button class="delete-btn" onclick="this.closest('tr').remove(); saveFixedCourses();">🗑️</button>`;
                 tr.innerHTML = `
                     <td><b>${item.student}</b></td><td>${item.course}</td><td>${item.days}</td><td>${item.time}</td>
                     <td><input type="text" class="input-payment" style="width:90%; padding:8px;" value="${item.payment}"></td>
@@ -324,25 +255,142 @@
                 tbody.appendChild(tr);
             });
         }
+    }
 
-        const storedAttendance = localStorage.getItem('savedAttendanceV4');
-        if(storedAttendance) {
-            const data = JSON.parse(storedAttendance);
-            const tbody = document.getElementById('attendanceHistoryBody');
-            tbody.innerHTML = '';
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${item.student}</b></td><td>${item.course}</td><td>${item.date}</td>
-                    <td><span class="status-${item.status}">${item.status === 'حضور' ? '✔️ حضور' : item.status === 'غياب' ? '❌ غياب' : '⏳ تأجيل'}</span></td>
-                    <td><button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
+
+    // --- ثانياً: أكواد سجل الحضور المختلط (جوجل شيت + فوري) ---
+    function getDeletedRecords() {
+        const deleted = localStorage.getItem('deletedAttendanceRecords');
+        return deleted ? JSON.parse(deleted) : [];
+    }
+
+    function deleteAttendanceRowFromUI(student, course, date) {
+        if(confirm("هل أنتِ متأكدة من حذف هذا السجل من شاشة الموقع؟")) {
+            const deletedRecords = getDeletedRecords();
+            deletedRecords.push({ student, course, date });
+            localStorage.setItem('deletedAttendanceRecords', JSON.stringify(deletedRecords));
+            loadDataFromGoogleSheet();
         }
     }
 
-    window.onload = loadAllData;
+    // دالة مساعدة لإنشاء شكل خانة الحالة بالإيموجي واللون المناسب
+    function getStatusTemplate(rawStatus) {
+        if (!rawStatus) return '<span>غير محدد</span>';
+        rawStatus = rawStatus.trim();
+        if (rawStatus.includes('حضور') || rawStatus.includes('✔️')) {
+            return '<span class="status-حضور">✔️ حضور</span>';
+        } else if (rawStatus.includes('غياب') || rawStatus.includes('❌')) {
+            return '<span class="status-غياب">❌ غياب</span>';
+        } else if (rawStatus.includes('تأجيل') || rawStatus.includes('⏳')) {
+            return '<span class="status-تأجيل">⏳ تأجيل</span>';
+        } else {
+            return `<span>${rawStatus}</span>`;
+        }
+    }
+
+    async function loadDataFromGoogleSheet() {
+        try {
+            const response = await fetch(SHEETDB_URL);
+            const data = await response.json();
+            const tbody = document.getElementById('attendanceHistoryBody');
+            tbody.innerHTML = '';
+
+            const deletedRecords = getDeletedRecords();
+            let displayedCount = 0;
+
+            if(data && data.length > 0 && !data.error) {
+                // عرض البيانات القادمة من جوجل شيت بترتيب عكسي
+                data.reverse().forEach(item => {
+                    const sName = item.الاسم ? item.الاسم.trim() : '';
+                    const cName = item.المادة ? item.المادة.trim() : '';
+                    const rDate = item.التاريخ ? item.التاريخ.trim() : '';
+
+                    const isDeleted = deletedRecords.some(del => del.student === sName && del.course === cName && del.date === rDate);
+                    if (isDeleted) return;
+
+                    displayedCount++;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><b>${sName}</b></td>
+                        <td>${cName}</td>
+                        <td>${rDate}</td>
+                        <td>${getStatusTemplate(item.الحالة)}</td>
+                        <td><button class="delete-btn" onclick="deleteAttendanceRowFromUI('${sName}', '${cName}', '${rDate}')">🗑️</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            if(displayedCount === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">لا توجد حصص مسجلة حالياً.</td></tr>`;
+            }
+        } catch (error) {
+            console.error(error);
+            document.getElementById('attendanceHistoryBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">حدث خطأ أثناء تحميل البيانات من جوجل شيت.</td></tr>`;
+        }
+    }
+
+    async function addAttendanceRecord() {
+        const student = document.getElementById('attendanceStudent').value;
+        const course = document.getElementById('attendanceCourse').value.trim();
+        const date = document.getElementById('attendanceDate').value;
+        const status = document.getElementById('attendanceStatus').value;
+
+        if(!course || !date) { alert("برجاء كتابة اسم المادة وتحديد التاريخ"); return; }
+
+        // 🌟 [تحديث فوري]: إضافة الحصة في الجدول فوراً أمام عينيكِ أولاً
+        const tbody = document.getElementById('attendanceHistoryBody');
+        
+        // إذا كان الجدول يحتوي على رسالة "لا توجد حصص"، نقوم بتفريغه أولاً
+        if (tbody.innerHTML.includes('لا توجد حصص') || tbody.innerHTML.includes('جاري تحميل')) {
+            tbody.innerHTML = '';
+        }
+
+        const tr = document.createElement('tr');
+        tr.style.backgroundColor = "#fffde7"; // تمييز ملوّن خفيف للحصة المضافة فوراً
+        tr.innerHTML = `
+            <td><b>${student}</b></td>
+            <td>${course}</td>
+            <td>${date}</td>
+            <td>${getStatusTemplate(status)}</td>
+            <td><button class="delete-btn" onclick="deleteAttendanceRowFromUI('${student}', '${course}', '${date}')">🗑️</button></td>
+        `;
+        // إضافتها في أعلى السجل فوراً
+        tbody.insertBefore(tr, tbody.firstChild);
+
+        // الآن نقوم بعملية الإرسال سراً في الخلفية لجوجل شيت
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingStatus = document.getElementById('loadingStatus');
+        submitBtn.disabled = true;
+        loadingStatus.style.display = 'block';
+
+        const rowData = { "data": [{ "الاسم": student, "المادة": course, "التاريخ": date, "الحالة": status }] };
+
+        try {
+            const response = await fetch(SHEETDB_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rowData)
+            });
+
+            if(response.ok) {
+                // تم الحفظ بنجاح في الخلفية، نزيل اللون المميّز المؤقت لتأكيد الحفظ الثابت
+                tr.style.backgroundColor = "transparent";
+            } else {
+                alert("تم إضافتها للشاشة لكن حدثت مشكلة في الحفظ بجوجل شيت، تأكدي من صلاحيات الملف.");
+            }
+        } catch (error) {
+            alert("تم إضافتها للشاشة، لكن فشل إرسالها لجوجل شيت بسبب انقطاع الإنترنت.");
+        } finally {
+            submitBtn.disabled = false;
+            loadingStatus.style.display = 'none';
+        }
+    }
+
+    window.onload = function() {
+        loadFixedCourses();
+        loadDataFromGoogleSheet();
+    };
 </script>
 
 </body>
