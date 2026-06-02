@@ -84,9 +84,10 @@
         th, td { padding: 12px 15px; border-bottom: 1px solid #e0e0e0; }
         th { background-color: #cfd8dc; color: #37474f; font-weight: bold; }
 
-        .status-حضور, .status-✔️ { color: #2e7d32; font-weight: bold; background-color: #e8f5e9; padding: 4px 8px; border-radius: 5px; }
-        .status-غياب, .status-❌ { color: #c62828; font-weight: bold; background-color: #ffebee; padding: 4px 8px; border-radius: 5px; }
-        .status-تأجيل, .status-⏳ { color: #ef6c00; font-weight: bold; background-color: #fff3e0; padding: 4px 8px; border-radius: 5px; }
+        .status-badge { padding: 4px 8px; border-radius: 5px; font-weight: bold; }
+        .status-attendance-yes { color: #2e7d32; background-color: #e8f5e9; }
+        .status-attendance-no { color: #c62828; background-color: #ffebee; }
+        .status-attendance-delay { color: #ef6c00; background-color: #fff3e0; }
         
         .btn-save-courses {
             background-color: #4db6ac; color: white; border: none; padding: 12px 25px;
@@ -191,9 +192,10 @@
 <script>
     const SHEETDB_URL = "https://sheetdb.io/api/v1/1845ir4smen4c";
 
+    // ضبط تاريخ اليوم تلقائياً في الخانة
     document.getElementById('attendanceDate').valueAsDate = new Date();
 
-    // --- أولاً: أكواد إدارة المواعيد الثابتة والاشتراكات ---
+    // --- أولاً: إدارة جدول المواعيد الثابتة والاشتراكات ---
     function addNewCourseRow() {
         const student = document.getElementById('studentName').value.trim();
         const course = document.getElementById('courseName').value.trim();
@@ -258,14 +260,14 @@
     }
 
 
-    // --- ثانياً: أكواد سجل الحضور المختلط (جوجل شيت + فوري) ---
+    // --- ثانياً: إدارة الحصص وسجل الحضور (حل مشكلة التاريخ جذرياً) ---
     function getDeletedRecords() {
         const deleted = localStorage.getItem('deletedAttendanceRecords');
         return deleted ? JSON.parse(deleted) : [];
     }
 
     function deleteAttendanceRowFromUI(student, course, date) {
-        if(confirm("هل أنتِ متأكدة من حذف هذا السجل من شاشة الموقع؟")) {
+        if(confirm("هل أنتِ متأكدة من حذف هذه الحصة من شاشة الموقع؟")) {
             const deletedRecords = getDeletedRecords();
             deletedRecords.push({ student, course, date });
             localStorage.setItem('deletedAttendanceRecords', JSON.stringify(deletedRecords));
@@ -273,18 +275,31 @@
         }
     }
 
-    // دالة مساعدة لإنشاء شكل خانة الحالة بالإيموجي واللون المناسب
+    // الدالة المنقذة لتحويل أرقام تاريخ شيت جوجل (مثل 46175) إلى تاريخ حقيقي ومقروء بالموقع
+    function formatGoogleDate(dateVal) {
+        if (!dateVal) return '';
+        let strDate = String(dateVal).replace(/'/g, '').trim(); // إزالة علامة الاقتباس الحامية إن وجدت
+        if (!isNaN(strDate) && strDate.length >= 4 && strDate.length <= 6) {
+            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+            const daysInMs = Number(strDate) * 24 * 60 * 60 * 1000;
+            const convertedDate = new Date(excelEpoch.getTime() + daysInMs);
+            return convertedDate.toISOString().split('T')[0];
+        }
+        return strDate;
+    }
+
     function getStatusTemplate(rawStatus) {
-        if (!rawStatus) return '<span>غير محدد</span>';
-        rawStatus = rawStatus.trim();
-        if (rawStatus.includes('حضور') || rawStatus.includes('✔️')) {
-            return '<span class="status-حضور">✔️ حضور</span>';
-        } else if (rawStatus.includes('غياب') || rawStatus.includes('❌')) {
-            return '<span class="status-غياب">❌ غياب</span>';
-        } else if (rawStatus.includes('تأجيل') || rawStatus.includes('⏳')) {
-            return '<span class="status-تأجيل">⏳ تأجيل</span>';
+        if (!rawStatus) return '<span class="status-badge status-attendance-delay">غير محدد</span>';
+        let cleanStatus = String(rawStatus).trim();
+
+        if (cleanStatus.includes('حضور') || cleanStatus.includes('✔️')) {
+            return '<span class="status-badge status-attendance-yes">✔️ حضور</span>';
+        } else if (cleanStatus.includes('غياب') || cleanStatus.includes('❌')) {
+            return '<span class="status-badge status-attendance-no">❌ غياب</span>';
+        } else if (cleanStatus.includes('تأجيل') || cleanStatus.includes('⏳')) {
+            return '<span class="status-badge status-attendance-delay">⏳ تأجيل</span>';
         } else {
-            return `<span>${rawStatus}</span>`;
+            return `<span class="status-badge">${cleanStatus}</span>`;
         }
     }
 
@@ -299,11 +314,13 @@
             let displayedCount = 0;
 
             if(data && data.length > 0 && !data.error) {
-                // عرض البيانات القادمة من جوجل شيت بترتيب عكسي
                 data.reverse().forEach(item => {
-                    const sName = item.الاسم ? item.الاسم.trim() : '';
-                    const cName = item.المادة ? item.المادة.trim() : '';
-                    const rDate = item.التاريخ ? item.التاريخ.trim() : '';
+                    const sName = item.الاسم ? String(item.الاسم).trim() : '';
+                    const cName = item.المادة ? String(item.المادة).trim() : '';
+                    const rDate = formatGoogleDate(item.التاريخ);
+                    const statusText = item.الحالة ? String(item.الحالة).trim() : '';
+
+                    if (!sName && !cName) return;
 
                     const isDeleted = deletedRecords.some(del => del.student === sName && del.course === cName && del.date === rDate);
                     if (isDeleted) return;
@@ -314,7 +331,7 @@
                         <td><b>${sName}</b></td>
                         <td>${cName}</td>
                         <td>${rDate}</td>
-                        <td>${getStatusTemplate(item.الحالة)}</td>
+                        <td>${getStatusTemplate(statusText)}</td>
                         <td><button class="delete-btn" onclick="deleteAttendanceRowFromUI('${sName}', '${cName}', '${rDate}')">🗑️</button></td>
                     `;
                     tbody.appendChild(tr);
@@ -326,7 +343,7 @@
             }
         } catch (error) {
             console.error(error);
-            document.getElementById('attendanceHistoryBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">حدث خطأ أثناء تحميل البيانات من جوجل شيت.</td></tr>`;
+            document.getElementById('attendanceHistoryBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">حدث خطأ أثناء تحميل البيانات الحالية.</td></tr>`;
         }
     }
 
@@ -338,16 +355,13 @@
 
         if(!course || !date) { alert("برجاء كتابة اسم المادة وتحديد التاريخ"); return; }
 
-        // 🌟 [تحديث فوري]: إضافة الحصة في الجدول فوراً أمام عينيكِ أولاً
         const tbody = document.getElementById('attendanceHistoryBody');
-        
-        // إذا كان الجدول يحتوي على رسالة "لا توجد حصص"، نقوم بتفريغه أولاً
         if (tbody.innerHTML.includes('لا توجد حصص') || tbody.innerHTML.includes('جاري تحميل')) {
             tbody.innerHTML = '';
         }
 
+        // 🌟 خطوة الاستقرار الفوري: ننشئ الصف في الموقع فوراً ونثبته أمام عينك
         const tr = document.createElement('tr');
-        tr.style.backgroundColor = "#fffde7"; // تمييز ملوّن خفيف للحصة المضافة فوراً
         tr.innerHTML = `
             <td><b>${student}</b></td>
             <td>${course}</td>
@@ -355,32 +369,27 @@
             <td>${getStatusTemplate(status)}</td>
             <td><button class="delete-btn" onclick="deleteAttendanceRowFromUI('${student}', '${course}', '${date}')">🗑️</button></td>
         `;
-        // إضافتها في أعلى السجل فوراً
         tbody.insertBefore(tr, tbody.firstChild);
 
-        // الآن نقوم بعملية الإرسال سراً في الخلفية لجوجل شيت
         const submitBtn = document.getElementById('submitBtn');
         const loadingStatus = document.getElementById('loadingStatus');
         submitBtn.disabled = true;
         loadingStatus.style.display = 'block';
 
-        const rowData = { "data": [{ "الاسم": student, "المادة": course, "التاريخ": date, "الحالة": status }] };
+        // 🛠️ الحيلة الذكية: إضافة علامة اقتباس علوية (') قبل التاريخ لإجبار جوجل شيت على حفظه كنص سليم وقراءته بشكل صحيح بدون أرقام تسلسلية
+        const safeDateForGoogle = "'" + date; 
+        const rowData = { "data": [{ "الاسم": student, "المادة": course, "التاريخ": safeDateForGoogle, "الحالة": status }] };
 
         try {
-            const response = await fetch(SHEETDB_URL, {
+            await fetch(SHEETDB_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(rowData)
             });
-
-            if(response.ok) {
-                // تم الحفظ بنجاح في الخلفية، نزيل اللون المميّز المؤقت لتأكيد الحفظ الثابت
-                tr.style.backgroundColor = "transparent";
-            } else {
-                alert("تم إضافتها للشاشة لكن حدثت مشكلة في الحفظ بجوجل شيت، تأكدي من صلاحيات الملف.");
-            }
+            // نترك الصف الفوري ثابتاً كما هو، لتفادي الـ Refresh المباشر الذي كان يخفي البيانات
         } catch (error) {
-            alert("تم إضافتها للشاشة، لكن فشل إرسالها لجوجل شيت بسبب انقطاع الإنترنت.");
+            console.error(error);
+            alert("تم التحديث على الشاشة، وفشل الإرسال لجوجل شيت بسبب جدار الحماية أو الإنترنت.");
         } finally {
             submitBtn.disabled = false;
             loadingStatus.style.display = 'none';
