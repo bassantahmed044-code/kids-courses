@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام متابعة كورسات وحضور الأولاد بالتاريخ</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #4a4a4a;
+            --baby-blue: #e3f2fd;
+            --baby-blue-dark: #42a5f5;
+            --pink-soft: #fce4ec;
+            --pink-dark: #ec407a;
+            --pistachio: #e8f5e9;
+            --pistachio-dark: #66bb6a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        h1, h2 { text-align: center; color: #37474f; }
+        h1 { margin-bottom: 30px; font-size: 1.8rem; }
+        h2 { margin-top: 40px; font-size: 1.4rem; border-bottom: 2px solid #cfd8dc; padding-bottom: 10px; }
+
+        .form-section {
+            background-color: #f9fbe7;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #d4e157;
+        }
+
+        .form-section.pink-section {
+            background-color: var(--pink-soft);
+            border: 1px solid var(--pink-dark);
+        }
+
+        .form-section h3 { margin-top: 0; color: #37474f; margin-bottom: 15px; }
+
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 1px solid #cfd8dc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-action {
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+
+        .btn-add-course { background-color: #90caf9; color: #0d47a1; }
+        .btn-add-attendance { background-color: #a5d6a7; color: #1b5e20; }
+        .btn-add-course:hover { background-color: #64b5f6; }
+        .btn-add-attendance:hover { background-color: #81c784; }
+
+        .table-responsive { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #e0e0e0; }
+        th { background-color: #cfd8dc; color: #37474f; font-weight: bold; }
+
+        .status-حضور { color: #2e7d32; font-weight: bold; background-color: #e8f5e9; padding: 4px 8px; border-radius: 5px; }
+        .status-غياب { color: #c62828; font-weight: bold; background-color: #ffebee; padding: 4px 8px; border-radius: 5px; }
+        .status-تأجيل { color: #ef6c00; font-weight: bold; background-color: #fff3e0; padding: 4px 8px; border-radius: 5px; }
+
+        .btn-save-all {
+            background-color: #4db6ac;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 25px;
+            display: block;
+            width: 100%;
+        }
+        .btn-save-all:hover { background-color: #009688; }
+
+        .delete-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📅 نظام متابعة المواعيد وسجل الحصص التاريخي</h1>
+
+    <div class="form-section">
+        <h3>➕ إضافة كورس جديد للمواعيد الثابتة</h3>
+        <div class="form-group">
+            <input type="text" id="studentName" placeholder="اسم الابن (ألماس / عز الدين)">
+            <input type="text" id="courseName" placeholder="الكورس (انجلش، رياضيات)">
+            <input type="text" id="courseDays" placeholder="الأيام (السبت والثلاثاء)">
+            <input type="text" id="courseTime" placeholder="الموعد (١١ ص، ١ م)">
+            <button class="btn-action btn-add-course" onclick="addNewCourseRow()">إضافة كورس</button>
+        </div>
+    </div>
+
+    <h3>📌 جدول المواعيد الثابتة والاشتراكات الشهرية</h3>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>الأبناء</th>
+                    <th>الكورس</th>
+                    <th>الأيام</th>
+                    <th>الموعد</th>
+                    <th>الاشتراك الشهري والتاريخ المدفوع فيه</th>
+                    <th>حذف</th>
+                </tr>
+            </thead>
+            <tbody id="coursesTableBody">
+                <tr data-fixed="true" style="border-right: 5px solid var(--pink-dark);">
+                    <td><b>ألماس</b></td>
+                    <td>انجلش</td>
+                    <td>السبت والثلاثاء</td>
+                    <td>١١ ص</td>
+                    <td><input type="text" class="input-payment" style="width:90%; padding:8px;" placeholder="مثال: مدفوع - تاريخ 1-6"></td>
+                    <td>-</td>
+                </tr>
+                <tr data-fixed="true" style="border-right: 5px solid var(--baby-blue-dark);">
+                    <td><b>عز الدين</b></td>
+                    <td>انجلش</td>
+                    <td>السبت والثلاثاء</td>
+                    <td>١ م</td>
+                    <td><input type="text" class="input-payment" style="width:90%; padding:8px;" placeholder="مثال: مدفوع - تاريخ 1-6"></td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="form-section pink-section" style="margin-top: 40px;">
+        <h3>📝 تسجيل حصة جديدة بالتاريخ (حضور / غياب / تأجيل)</h3>
+        <div class="form-group">
+            <select id="attendanceStudent">
+                <option value="ألماس">ألماس</option>
+                <option value="عز الدين">عز الدين</option>
+            </select>
+            <input type="text" id="attendanceCourse" placeholder="المادة (مثلاً: انجلش)" value="انجلش">
+            <input type="date" id="attendanceDate">
+            <select id="attendanceStatus">
+                <option value="حضور">✔️ حضور</option>
+                <option value="غياب">❌ غياب</option>
+                <option value="تأجيل">⏳ تأجيل</option>
+            </select>
+            <button class="btn-action btn-add-attendance" onclick="addAttendanceRecord()">تسجيل الحصة</button>
+        </div>
+    </div>
+
+    <h2>📜 سجل الحصص التاريخي التراكمي</h2>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>اسم الابن</th>
+                    <th>المادة / الكورس</th>
+                    <th>التاريخ</th>
+                    <th>حالة الحصة</th>
+                    <th>حذف السجل</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceHistoryBody">
+                </tbody>
+        </table>
+    </div>
+
+    <button class="btn-save-all" onclick="saveAllDataToStorage(true)">💾 حفظ كل البيانات والتواريخ المتغيرة</button>
+</div>
+
+<script>
+    // تعيين تاريخ اليوم تلقائياً
+    document.getElementById('attendanceDate').valueAsDate = new Date();
+
+    // دالة إضافة كورس ثابت
+    function addNewCourseRow() {
+        const student = document.getElementById('studentName').value.trim();
+        const course = document.getElementById('courseName').value.trim();
+        const days = document.getElementById('courseDays').value.trim();
+        const time = document.getElementById('courseTime').value.trim();
+
+        if(!student || !course || !days || !time) { 
+            alert("تنبيه: يرجى ملء جميع خانات الكورس الجديد أولاً (الاسم، المادة، الأيام، الموعد)."); 
+            return; 
+        }
+
+        const tbody = document.getElementById('coursesTableBody');
+        const tr = document.createElement('tr');
+        tr.style.borderRight = "5px solid var(--pistachio-dark)";
+        tr.innerHTML = `
+            <td><b>${student}</b></td>
+            <td>${course}</td>
+            <td>${days}</td>
+            <td>${time}</td>
+            <td><input type="text" class="input-payment" style="width:90%; padding:8px;" placeholder="تفاصيل الدفع والتاريخ"></td>
+            <td><button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button></td>
+        `;
+        tbody.appendChild(tr);
+        
+        // تحديث الخيارات تلقائياً
+        const select = document.getElementById('attendanceStudent');
+        if (![...select.options].some(opt => opt.value === student)) {
+            const opt = document.createElement('option');
+            opt.value = student; opt.innerText = student;
+            select.appendChild(opt);
+        }
+
+        document.getElementById('studentName').value = '';
+        document.getElementById('courseName').value = '';
+        document.getElementById('courseDays').value = '';
+        document.getElementById('courseTime').value = '';
+        saveAllDataToStorage(false);
+    }
+
+    // دالة تسجيل حصة بالتاريخ
+    function addAttendanceRecord() {
+        const student = document.getElementById('attendanceStudent').value;
+        const course = document.getElementById('attendanceCourse').value.trim();
+        const date = document.getElementById('attendanceDate').value;
+        const status = document.getElementById('attendanceStatus').value;
+
+        if(!course || !date) { 
+            alert("تنبيه: يرجى كتابة اسم المادة وتحديد التاريخ قبل التسجيل."); 
+            return; 
+        }
+
+        const tbody = document.getElementById('attendanceHistoryBody');
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+            <td><b>${student}</b></td>
+            <td>${course}</td>
+            <td>${date}</td>
+            <td><span class="status-${status}">${status === 'حضور' ? '✔️ حضور' : status === 'غياب' ? '❌ غياب' : '⏳ تأجيل'}</span></td>
+            <td><button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button></td>
+        `;
+        
+        tbody.insertBefore(tr, tbody.firstChild);
+        saveAllDataToStorage(false);
+    }
+
+    // دالة الحفظ الشامل
+    function saveAllDataToStorage(showAlert) {
+        const courseRows = document.querySelectorAll('#coursesTableBody tr');
+        const coursesData = [];
+        courseRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const paymentVal = row.querySelector('.input-payment') ? row.querySelector('.input-payment').value : '';
+            coursesData.push({
+                student: cells[0].innerText, course: cells[1].innerText,
+                days: cells[2].innerText, time: cells[3].innerText,
+                payment: paymentVal, style: row.style.borderRight, isFixed: row.getAttribute('data-fixed')
+            });
+        });
+        localStorage.setItem('savedCoursesV4', JSON.stringify(coursesData));
+
+        const attendanceRows = document.querySelectorAll('#attendanceHistoryBody tr');
+        const attendanceData = [];
+        attendanceRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const statusText = cells[3].innerText.replace(/[✔️❌⏳\s]/g, '');
+            attendanceData.push({
+                student: cells[0].innerText, course: cells[1].innerText,
+                date: cells[2].innerText, status: statusText
+            });
+        });
+        localStorage.setItem('savedAttendanceV4', JSON.stringify(attendanceData));
+
+        if(showAlert) {
+            alert("تم حفظ جميع التحديثات والاشتراكات بنجاح! ✨");
+        }
+    }
+
+    // دالة تحميل البيانات عند فتح الموقع
+    function loadAllData() {
+        const storedCourses = localStorage.getItem('savedCoursesV4');
+        if(storedCourses) {
+            const data = JSON.parse(storedCourses);
+            const tbody = document.getElementById('coursesTableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.style.borderRight = item.style;
+                if(item.isFixed) tr.setAttribute('data-fixed', 'true');
+                const delBtn = item.isFixed ? '-' : `<button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button>`;
+                tr.innerHTML = `
+                    <td><b>${item.student}</b></td><td>${item.course}</td><td>${item.days}</td><td>${item.time}</td>
+                    <td><input type="text" class="input-payment" style="width:90%; padding:8px;" value="${item.payment}"></td>
+                    <td>${delBtn}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        const storedAttendance = localStorage.getItem('savedAttendanceV4');
+        if(storedAttendance) {
+            const data = JSON.parse(storedAttendance);
+            const tbody = document.getElementById('attendanceHistoryBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${item.student}</b></td><td>${item.course}</td><td>${item.date}</td>
+                    <td><span class="status-${item.status}">${item.status === 'حضور' ? '✔️ حضور' : item.status === 'غياب' ? '❌ غياب' : '⏳ تأجيل'}</span></td>
+                    <td><button class="delete-btn" onclick="this.closest('tr').remove(); saveAllDataToStorage(false);">🗑️</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    }
+
+    window.onload = loadAllData;
+</script>
+
+</body>
+</html>
